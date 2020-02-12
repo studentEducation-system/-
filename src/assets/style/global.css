@@ -1,0 +1,5 @@
+/* 全局样式 */
+.el-message.el-message--error.is-closable.my-message{
+    position:fixed;
+    top:20px !important;
+}
