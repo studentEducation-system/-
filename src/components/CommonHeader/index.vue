@@ -44,7 +44,7 @@
     created() {
       this.status = this.$cookie.getCookie('status');
       this.username = this.$cookie.getCookie('username');
-      this.imgURL = this.$cookie.getCookie('avatar');
+      this.imgURL = window.sessionStorage.getItem('avatar')
 
     },
     mounted() {},
@@ -82,7 +82,7 @@
               duration: 1000
             });
             this.$cookie.deleteCookie('sessionId');
-            this.$cookie.deleteCookie('avatar')
+             window.sessionStorage.setItem('avatar','')
             setTimeout(()=>{
               this.$router.push('/login')
             },1000)
@@ -178,7 +178,6 @@
   }
 
   .select {
-    // display: none;
     position: absolute;
     transition: all 0.3s linear;
     z-index: 100;
@@ -206,6 +205,6 @@
   .select.active {
     display: block;
     opacity: 1;
-    top: 65px;
+    top: 60px;
   }
 </style>

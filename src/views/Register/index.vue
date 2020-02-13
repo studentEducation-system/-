@@ -19,7 +19,7 @@
           <el-input type="password" placeholder="请确认输入密码" v-model="ruleForm.checkPass"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" style="width:100%" @click='updatePassword'>确认更改</el-button>
+          <el-button type="primary" style="width:100%" @click='updatePasswordAndAvatar'>确认更改</el-button>
         </el-form-item>
       </el-form>
 
@@ -76,30 +76,40 @@
     watch: {},
     created() {
       this.ruleForm.username = this.$route.query.username;
-      this.imgURL = this.$cookie.getCookie('avatar') || ''
+      this.imgURL = window.sessionStorage.getItem('avatar') || ''
     },
     mounted() {},
     methods: {
-      updatePassword() {
+      updatePasswordAndAvatar() {
         this.$refs['ruleForm'].validate((valid) => {
           if (valid && !this.isRequestRegister) {
             this.isRequestLogin = true;
+            let inputFile = this.$refs.file;
+            let fileObj = inputFile.files[0];
+            const formData = new FormData(); //使用formdata上传文件
+            if (fileObj) {
+              formData.append("imgfile", fileObj, fileObj.name);
+              formData.append("imgfile", this.ruleForm.username);
+              console.log(fileObj)
+            } else {
+              formData.append("imgfile", '');
+
+            }
+            formData.append("username", this.ruleForm.username);
+            formData.append("password", this.ruleForm.pass);
             this.$ajax({
               method: 'post',
-              url: 'http://localhost:12306/register',
-              data: {
-                username: this.ruleForm.username,
-                password: this.ruleForm.pass,
-              }
+              url: `http://localhost:12306/register?username=${this.ruleForm.username}`,
+              data: formData
             }).then((res) => {
               this.handleInfo(res);
               this.isRequestLogin = false;
-              this.$cookie.setCookie('avatar',this.imgURL,1)
             }, (err) => {
               this.$message.error('服务器开小差');
               this.isRequestLogin = false;
 
             })
+
           } else {
             return false;
           }
@@ -137,25 +147,14 @@
       fileBtn(e) {
         let inputFile = this.$refs.file;
         let fileObj = inputFile.files[0];
-        if (fileObj) {
-          const formData = new FormData();
-          formData.append("imgfile", fileObj,fileObj.name);
-           formData.append("imgfile", '张三');
-          this.imgURL = formData;
-          
-           this.$ajax({
-              method: 'post',
-              url: 'http://localhost:12306/uploading',
-              data:this.imgURL
-            }).then((res) => {
-               
-            }, (err) => {
-             
+        const windowURL = window.URL || window.webkitURL; //使用该方法生成二进制格式的图片
 
-            })
-        }else{
+        if (fileObj) {
+          const imgURL = windowURL.createObjectURL(fileObj);
+          this.imgURL = imgURL
+        } else {
           this.imgURL = '';
-          this.$cookie.deleteCookie('avatar')
+
 
         }
       }

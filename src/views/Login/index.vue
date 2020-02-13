@@ -3,11 +3,12 @@
 
     <div class="content-login">
       <div class="avatar">
-        <i class="iconfont-ats icon-lijimianshi"></i>
+        <i v-if="!imgURL" class="iconfont-ats icon-lijimianshi"></i>
+        <img v-else :src=imgURL alt="" ref="avatarImg" width="100px" height="100px">
       </div>
       <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="60px" class="form-ruleForm" :hide-required-asterisk=true>
         <el-form-item style="color:red;font-size:20px" class="form-label" label="账号" prop="username">
-          <el-input type="text" placeholder="请输入账号" v-model="ruleForm.username"></el-input>
+          <el-input type="text" placeholder="请输入账号" v-model="ruleForm.username" @blur="onBlur"></el-input>
         </el-form-item>
         <el-form-item class="form-label" label="密码" prop="password">
           <el-input type="password" placeholder="请输入密码" v-model="ruleForm.password"></el-input>
@@ -26,6 +27,8 @@
 </template>
 
 <script>
+  import axios from 'axios'
+
   export default {
     name: "",
     components: {},
@@ -44,19 +47,33 @@
             { required: true, message: '请输入密码', trigger: 'blur' }
           ]
         },
-        isRequestLogin:false
+        isRequestLogin: false,
+        imgURL: ''
       }
     },
     computed: {},
     watch: {},
     created() {
-      if(this.$route.query.username){
+      if (this.$route.query.username) {
         this.ruleForm.username = this.$route.query.username
       }
+      this.getAvatar()
     },
     mounted() {},
     beforeDestroy() {},
     methods: {
+      getAvatar() {
+        axios.get(`http://localhost:12306/getAvatar?username=${this.ruleForm.username}`, { responseType: 'arraybuffer' })
+          .then((res) => {
+            this.imgURL = `data: image/jpeg;base64,${btoa(new Uint8Array(res.data).reduce((data, byte) => data + String.fromCharCode(byte), ''))}`;
+        
+          }, (err) => {
+            this.imgURL = ''
+          });
+      },
+      onBlur() {
+        this.getAvatar()
+      },
       goToRegister() {
         this.$router.push({ path: '/applyCount' })
       },
@@ -72,12 +89,10 @@
                 password: this.ruleForm.password
               }
             }).then((res) => {
-              this.$cookie.setCookie('sessionId',res.cookie,1);
-              this.$cookie.setCookie('username',res.username,1);
-              this.$cookie.setCookie('status',res.status,1);
-              this.$cookie.setCookie('avatar',res.avatar,1);
-
-              console.log(res,'songbiao')
+              this.$cookie.setCookie('sessionId', res.cookie, 1);
+              this.$cookie.setCookie('username', res.username, 1);
+              this.$cookie.setCookie('status', res.status, 1);
+              window.sessionStorage.setItem('avatar',this.imgURL)
               this.handleInfo(res);
               this.isRequestLogin = false;
             }, (err) => {
@@ -97,15 +112,15 @@
             type: 'success',
             duration: 1500
           });
-          this.$router.push({path:'/'})
+          this.$router.push({ path: '/' })
         } else {
           this.$message({
             showClose: true,
             message: res.message,
             type: 'error',
-            duration:1500,
-            offset:0,
-            customClass:'my-message'
+            duration: 1500,
+            offset: 0,
+            customClass: 'my-message'
           });
         }
       }
@@ -137,7 +152,8 @@
         text-align: center;
         line-height: 90px;
 
-        i {
+        i,
+        img {
           display: inline-block;
           font-size: 50px;
           width: 60px;
