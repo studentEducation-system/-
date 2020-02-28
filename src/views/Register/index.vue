@@ -99,7 +99,7 @@
             formData.append("password", this.ruleForm.pass);
             this.$ajax({
               method: 'post',
-              url: `http://localhost:12306/register?username=${this.ruleForm.username}`,
+              url: `register?username=${this.ruleForm.username}`,
               data: formData
             }).then((res) => {
               this.handleInfo(res);

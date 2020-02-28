@@ -8,7 +8,7 @@
       </div>
       <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="60px" class="form-ruleForm" :hide-required-asterisk=true>
         <el-form-item style="color:red;font-size:20px" class="form-label" label="账号" prop="username">
-          <el-input type="text" placeholder="请输入账号" v-model="ruleForm.username" @blur="onBlur"></el-input>
+          <el-input type="text" placeholder="请输入账号" v-model="ruleForm.username" @input="onInput"></el-input>
         </el-form-item>
         <el-form-item class="form-label" label="密码" prop="password">
           <el-input type="password" placeholder="请输入密码" v-model="ruleForm.password"></el-input>
@@ -28,7 +28,7 @@
 
 <script>
   import axios from 'axios'
-
+  import throttling from '@/toolsFunc/shakeAndThrottling.js'
   export default {
     name: "",
     components: {},
@@ -48,7 +48,8 @@
           ]
         },
         isRequestLogin: false,
-        imgURL: ''
+        imgURL: '',
+        thro:null
       }
     },
     computed: {},
@@ -58,12 +59,13 @@
         this.ruleForm.username = this.$route.query.username
       }
       this.getAvatar()
+      this.thro = throttling.throttling(this.getAvatar,1500);
     },
     mounted() {},
     beforeDestroy() {},
     methods: {
       getAvatar() {
-        axios.get(`http://localhost:12306/getAvatar?username=${this.ruleForm.username}`, { responseType: 'arraybuffer' })
+        axios.get(`getAvatar?username=${this.ruleForm.username}`, { responseType: 'arraybuffer' })
           .then((res) => {
             this.imgURL = `data: image/jpeg;base64,${btoa(new Uint8Array(res.data).reduce((data, byte) => data + String.fromCharCode(byte), ''))}`;
         
@@ -71,8 +73,8 @@
             this.imgURL = ''
           });
       },
-      onBlur() {
-        this.getAvatar()
+      onInput() {
+            this.thro()
       },
       goToRegister() {
         this.$router.push({ path: '/applyCount' })
@@ -83,7 +85,7 @@
             this.isRequestLogin = true;
             this.$ajax({
               method: 'post',
-              url: 'http://localhost:12306/login',
+              url: 'login',
               data: {
                 username: this.ruleForm.username,
                 password: this.ruleForm.password

@@ -28,6 +28,8 @@
 </template>
 
 <script>
+  import axios from 'axios'
+
   export default {
     name: "",
     components: {},
@@ -45,11 +47,22 @@
       this.status = this.$cookie.getCookie('status');
       this.username = this.$cookie.getCookie('username');
       this.imgURL = window.sessionStorage.getItem('avatar')
-
+      if(!this.imgURL){
+        this.getAvatar()
+      }
     },
     mounted() {},
     beforeDestroy() {},
     methods: {
+      getAvatar(){
+         axios.get(`getAvatar?username=${this.username}`, { responseType: 'arraybuffer' })
+          .then((res) => {
+            this.imgURL = `data: image/jpeg;base64,${btoa(new Uint8Array(res.data).reduce((data, byte) => data + String.fromCharCode(byte), ''))}`;
+            window.sessionStorage.setItem('avatar',this.imgURL);
+          }, (err) => {
+            this.imgURL = ''
+          });
+      },
       showSelect() {
         let classList = this.$refs.select.classList;
         let classListArr = Array.from(classList)
@@ -69,7 +82,7 @@
         let session = this.$cookie.getCookie('sessionId')
         this.$ajax({
           method: 'post',
-          url: 'http://localhost:12306/signOutLogin',
+          url: 'signOutLogin',
           data: {
             session: session
           }

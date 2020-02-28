@@ -3,3 +3,7 @@
     position:fixed;
     top:20px !important;
 }
+
+.el-date-editor.el-range-editor.el-input__inner.el-date-editor--daterange.el-range-editor--large{
+    width:100% !important;
+}

@@ -8,13 +8,29 @@ const routes = [{
   path: '/',
   name: 'home',
   component: Home,
-  redirect: '/myResume',
+  redirect: '/myResume/viewResume',
   children: [
     {
       path: 'myResume',
       name: 'myResume',
-      component: () => import('@/views/MyResume/index.vue')
-
+      component: () => import('@/views/MyResume/index.vue'),
+      // redirect: '/myResume/addResume',
+      children: [
+      {
+        path: 'addResume',
+        name: 'addResume',
+        component: () => import('@/views/MyResume/component/addResume.vue')
+      },
+      {
+        path: 'updateResume',
+        name: 'updateResume',
+        component: () => import('@/views/MyResume/component/updateResume.vue')
+      },
+      {
+        path: 'viewResume',
+        name: 'viewResume',
+        component: () => import('@/views/MyResume/component/viewResume.vue')
+      }]
     },
     {
       path: 'jobInfo',
@@ -43,10 +59,10 @@ const routes = [{
   path: '/register',
   name: 'register',
   component: () => import('@/views/Register/index.vue')
-},{
-  path:'/applyCount',
-  name:'applyCount',
-  component:()=> import('@/views/applyCount/index.vue')
+}, {
+  path: '/applyCount',
+  name: 'applyCount',
+  component: () => import('@/views/applyCount/index.vue')
 }]
 
 
@@ -61,30 +77,30 @@ router.beforeEach((to, from, next) => {
     next();
   } else {
     let sessionId = document.cookie.split(';');
-    sessionId = sessionId.filter((ele)=>{
+    sessionId = sessionId.filter((ele) => {
       return ele.includes('sessionId');
     })
     sessionId = sessionId[0] && sessionId[0].split('=')[1].trim()
     axios({
       method: 'post',
-      url: 'http://localhost:12306/judgeLogin',
+      url: 'judgeLogin',
       data: {
         session: sessionId,
       }
-    }).then((res) => { 
-        if(res){
-          next()
-        }else{
-          Vue.prototype.$message.error('您还没有权限，请先登录');
-          setTimeout(() => {
-            location.href = '/login'
-            
-          }, 1000);
-        }
-    }, (err) => { 
-      
+    }).then((res) => {
+      if (res) {
+        next()
+      } else {
+        Vue.prototype.$message.error('您还没有权限，请先登录');
+        setTimeout(() => {
+          location.href = '/login'
+
+        }, 1000);
+      }
+    }, (err) => {
+
     })
-    
+
   }
 
 });

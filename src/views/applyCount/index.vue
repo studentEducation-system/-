@@ -65,7 +65,7 @@
             this.isRequestLogin = true;
             this.$ajax({
               method: 'post',
-              url: 'http://localhost:12306/applyCount',
+              url: 'applyCount',
               data: {
                 name: this.ruleForm.name,
                 number: this.ruleForm.number,

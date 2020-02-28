@@ -5,7 +5,6 @@
       <left-menu></left-menu>
       <div class="page-content">
         <router-view></router-view>
-
       </div>
     </div>
 
@@ -42,7 +41,7 @@
   }
 </script>
 
-<style type="text/less"  lang="less"  scoped>
+<style type="text/less"  lang="less">
   .page-home {
   width:100%;
   height:100%;
@@ -53,9 +52,34 @@
     .page-content{
       width:calc(100% - 200px);
       height:100%;
-      background:rgb(240, 244, 251)
+      background:rgb(240, 244, 251);
+      padding:20px;
+      box-sizing: border-box;
     }
   }
   
+}
+::-webkit-scrollbar {
+    width: 5px;
+    height: 10px;
+    /*background-color: #ddd;*/
+}
+
+
+/*滑块*/
+::-webkit-scrollbar-thumb {
+    background-color: #8eb5e7;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(84, 110, 226);
+}
+
+
+/*滑道*/
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px #ccc;
+    border-radius: 10px;
 }
 </style>
