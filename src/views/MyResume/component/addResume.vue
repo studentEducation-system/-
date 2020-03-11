@@ -42,7 +42,7 @@
 
     <template v-for="(item,index) in allTitle">
       <div :class="[item.className,{'active':item.cloneData}]" :key="index">
-        <div class="add" v-if="!item.cloneData">
+        <div class="add" v-if="!item.cloneData || (Array.isArray(item.cloneData) && item.cloneData.length == 0)">
           <div class="avatar">
             <div class="pic"></div>
             <div class="title">{{item.title}}</div>
@@ -56,9 +56,13 @@
           <div class="avatar">
             <div class="pic"></div>
             <div class="title">{{item.title}}</div>
-            <div class="edit" @click="item.editData(item.dialog,item.form)">
+            <div class="edit" @click="item.editData(item.dialog,item.form)" v-if="item.className != 'internship-experience' && item.className != 'project-experience'">
               <i class="iconfont-ats icon-jianlixiangqing-bianji"></i>
               编辑
+            </div>
+            <div class="edit" v-else @click="addInternshipData(item.dialog)">
+              <i class="iconfont-ats icon-jiahao1"></i>
+              添加
             </div>
           </div>
           <div class="education1" v-if="item.className == 'education'">
@@ -76,7 +80,23 @@
             </div>
 
           </div>
-          <div class="internship1" v-if="item.className == 'internship-experience'"></div>
+          <template  v-if="item.className == 'internship-experience'">
+            <div :key="index1" class="internship1" v-for="(ele,index1) in cloneInternship"  @mouseenter="onInternshipMouseEnter" @mouseleave="onInternshipMouseLeave">
+            <div class="header">
+              <span>{{ele.company}} / </span>
+              <span>{{ele.department}}</span>
+
+              <span class="edit"  @click="item.editData(item.dialog,ele,index1)">编辑</span>
+              <span class="time">{{ele.timeArea[0]}} - {{ele.timeArea[1]}}</span>
+            </div>
+            <div class="footer">
+              <p style="color:#333;margin-bottom:10px">{{ele.jobName}}</p>
+              {{ele.workContent}}
+            </div>
+          </div>
+          </template>
+          
+          
           <div class="project1" v-if="item.className == 'project-experience'"></div>
           <div class="major1" v-if="item.className == 'major-skill'"></div>
           <div class="evaluate1" v-if="item.className == 'person-evaluate'"></div>
@@ -144,12 +164,31 @@
       </el-form>
     </el-dialog>
 
-    <el-dialog title="实习经历" :visible.sync="internshipDialogVisible" width="30%" center>
-      <span>实习经历</span>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="internshipDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="internshipDialogVisible = false">确 定</el-button>
-      </span>
+    <el-dialog title="实习经历" :visible.sync="internshipDialogVisible" width="37%" center>
+
+      <el-form ref="internshipInfo" :rules="internshipInfoRules" :model="internshipInfo" label-width="80px">
+        <el-form-item label="公司" prop="company">
+          <el-input v-model="internshipInfo.company"></el-input>
+        </el-form-item>
+        <el-form-item label="部门" prop="department">
+          <el-input v-model="internshipInfo.department"></el-input>
+        </el-form-item>
+        <el-form-item label="职位" prop="jobName">
+          <el-input v-model="internshipInfo.jobName"></el-input>
+        </el-form-item>
+        <el-form-item label="实习时间" prop="timeArea">
+          <el-date-picker size="large" v-model="internshipInfo.timeArea" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" format="yyyy 年 MM 月 dd 日" value-format="yyyy-MM-dd">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="工作内容" prop="workContent">
+          <el-input type="textarea" :rows="5" placeholder="请输入内容" v-model="internshipInfo.workContent">
+          </el-input>
+        </el-form-item>
+        <el-form-item class="el-item-button">
+          <el-button type="primary" @click="onPersonSave('internshipInfo','internshipDialogVisible','cloneInternship',sendInternshipInfo)">保存</el-button>
+          <el-button @click="internshipDialogVisible = false">取消</el-button>
+        </el-form-item>
+      </el-form>
     </el-dialog>
 
 
@@ -203,12 +242,16 @@
 
         clonePerson: null,
         cloneEducation: null,
-        cloneInternship: null,
+        cloneInternship: [],
         cloneProject: null,
         cloneMajor: null,
         cloneEvaluate: null,
         isPersonResumeEdit: false,
         isEducationEdit: false,
+        isInternshipEdit: false,
+        isInternshipEditIndex:null,
+        internshipHover: false,
+
 
       }
     },
@@ -226,7 +269,7 @@
           title: '实习经历',
           dialog: 'internshipDialogVisible',
           cloneData: this.cloneInternship,
-          // editData:this.editEducation
+          editData: this.onEditInternship
         }, {
           className: 'project-experience',
           title: '项目经历',
@@ -260,6 +303,14 @@
     mounted() {},
     beforeDestroy() {},
     methods: {
+
+      onInternshipMouseEnter(e) {
+        console.log(e.target.className);
+        e.target.classList.add('active')
+      },
+      onInternshipMouseLeave(e) {
+        e.target.classList.remove('active')
+      },
       getPersonResume() { //从数据库中找到对应的简历数据
         this.$ajax({
           method: 'post',
@@ -272,6 +323,8 @@
             console.log(res)
             this.clonePerson = JSON.parse(res.data.personinfo);
             this.cloneEducation = JSON.parse(res.data.educationinfo)
+            this.cloneInternship = JSON.parse(res.data.internshipinfo).data || [];
+            console.log(this.cloneInternship)
           }
 
         })
@@ -286,6 +339,16 @@
         this[dialog] = true;
         this.educationInfoForm = this.cloneEducation;
       },
+      onEditInternship(dialog,ele,index) {
+        this.isInternshipEditIndex = index;
+        this.isInternshipEdit = true;
+        this[dialog] = true;
+        this.internshipInfo = ele;
+      },
+      addInternshipData(dialog){ 
+         
+        this[dialog] = true; 
+      },
       onAddInfoShow(e, item) { //点击添加按钮打开添加弹窗
         this[item.dialog] = true
       },
@@ -297,9 +360,19 @@
 
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            this[cloneObj] = deepClone(this[formName]); //深度克隆，数据备份
-            console.log(this[cloneObj])
-            callback(this[formName], formName)
+            if(formName == 'internshipInfo'){//如果编辑窗口是实习经历，用数组存储数据
+              if(this.isInternshipEdit&& this.isInternshipEditIndex!=null){
+                this[cloneObj].splice(this.isInternshipEditIndex,1,deepClone(this[formName]))
+              }else{
+               this[cloneObj].push(deepClone(this[formName])); //深度克隆，数据备份
+              }
+               callback(this[cloneObj], formName)
+            }else{
+              this[cloneObj] = deepClone(this[formName]); //深度克隆，数据备份
+              console.log(this[cloneObj])
+              callback(this[formName], formName)
+            }
+            
             this[dialog] = false
           } else {
             return false;
@@ -341,7 +414,7 @@
       sendEducationInfo(data, formName) {
         this.$ajax({
           method: 'post',
-          url: this.isEducationEdit?'eidtEducationInfo':'addEducationInfo', //判断是编辑数据还是新增数据
+          url: this.isEducationEdit ? 'eidtEducationInfo' : 'addEducationInfo', //判断是编辑数据还是新增数据
           data: {
             ...data,
             operator: this.$cookie.getCookie('username')
@@ -363,6 +436,33 @@
           }
           this.resetForm(formName)
 
+        })
+      },
+      sendInternshipInfo(data, formName) {
+        this.$ajax({
+          method: 'post',
+          url: this.isInternshipEdit ? 'editInternshipInfo' : 'addInternshipInfo', //判断是编辑数据还是新增数据
+          data: {
+            data,
+            operator: this.$cookie.getCookie('username')
+          }
+        }).then((res) => {
+          if (res.statusCode == 200) {
+            console.log(res)
+            this.$message({
+              message: res.message,
+              type: 'success',
+              duration: 1500
+            });
+          } else {
+            this.$message({
+              message: res.message,
+              type: 'error',
+              duration: 1500
+            });
+          }
+          this.resetForm(formName)
+          this.isInternshipEdit = false
         })
       }
     },
@@ -421,7 +521,8 @@
 
     }
 
-    .education.active {
+    .education.active,
+    .internship-experience.active {
       background: rgb(250, 250, 250);
       height: fit-content;
       padding: 20px;
@@ -483,6 +584,50 @@
             }
           }
 
+        }
+
+        .internship1 {
+          .header {
+            margin-bottom: 10px;
+
+            span {
+              font-size: 14px;
+              color: #333;
+              font-weight: 600;
+            }
+
+            span.time {
+              float: right;
+            }
+
+            span.edit {
+              display:none;
+              float: right;
+              color: #008c8c;
+              cursor: pointer;
+            }
+          }
+
+          .footer {
+            font-size: 14px;
+            color: #666;
+            line-height: 20px;
+          }
+        }
+        .internship1.active{
+            .header{
+               span.time {
+                 display: none;
+                float: right;
+            }
+
+            span.edit { 
+              display: inline-block;
+              float: right;
+              color: #008c8c;
+              cursor: pointer;
+            }
+            }
         }
       }
     }

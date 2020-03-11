@@ -65,7 +65,7 @@
     beforeDestroy() {},
     methods: {
       getAvatar() {
-        axios.get(`getAvatar?username=${this.ruleForm.username}`, { responseType: 'arraybuffer' })
+        axios.get(`http://localhost:12306/getAvatar?username=${this.ruleForm.username}`, { responseType: 'arraybuffer' })
           .then((res) => {
             this.imgURL = `data: image/jpeg;base64,${btoa(new Uint8Array(res.data).reduce((data, byte) => data + String.fromCharCode(byte), ''))}`;
         

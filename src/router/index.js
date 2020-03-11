@@ -10,6 +10,7 @@ const routes = [{
   component: Home,
   redirect: '/myResume/viewResume',
   children: [
+   
     {
       path: 'myResume',
       name: 'myResume',
@@ -50,6 +51,7 @@ const routes = [{
 
   ]
 },
+
 {
   path: '/login',
   name: 'login',

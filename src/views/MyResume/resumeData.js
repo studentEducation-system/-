@@ -60,6 +60,34 @@ export default {
                 '其他'
               ],
 
+              internshipInfo:{
+                company:'',
+                department:'',
+                jobName:'',
+                timeArea:'',
+                workContent:''
+              },
+              internshipInfoRules: {
+                company: [
+                  { required: true, message: '请输入公司', trigger: 'blur' },
+                ],
+                department: [
+                  { required: true, message: '请输入部门', trigger: 'blur' },
+                ],
+                jobName: [
+                  { required: true, message: '请输入职位名称', trigger: 'blur' },
+                ],
+                timeArea: [
+                {
+                  required: true,
+                  message: '实习时间',
+                  trigger: 'blur',
+                }],
+                workContent: [
+                  { required: true, message: '请输入实习内容', trigger: 'blur' },
+                ],
+              },
+
               
 
 
